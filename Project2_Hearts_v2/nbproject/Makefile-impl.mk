@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Project2_Hearts_v1
+PROJECTNAME=Project2_Hearts_v2
 
 # Active Configuration
 DEFAULTCONF=Release

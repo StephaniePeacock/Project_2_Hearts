@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Release configuration
 CND_PLATFORM_Release=Cygwin-Windows
 CND_ARTIFACT_DIR_Release=dist/Release/Cygwin-Windows
-CND_ARTIFACT_NAME_Release=project2_hearts_v1_backup
-CND_ARTIFACT_PATH_Release=dist/Release/Cygwin-Windows/project2_hearts_v1_backup
+CND_ARTIFACT_NAME_Release=project2_hearts_v2
+CND_ARTIFACT_PATH_Release=dist/Release/Cygwin-Windows/project2_hearts_v2
 CND_PACKAGE_DIR_Release=dist/Release/Cygwin-Windows/package
-CND_PACKAGE_NAME_Release=project2heartsv1backup.tar
-CND_PACKAGE_PATH_Release=dist/Release/Cygwin-Windows/package/project2heartsv1backup.tar
+CND_PACKAGE_NAME_Release=project2heartsv2.tar
+CND_PACKAGE_PATH_Release=dist/Release/Cygwin-Windows/package/project2heartsv2.tar
 # Debug configuration
 CND_PLATFORM_Debug=Cygwin-Windows
 CND_ARTIFACT_DIR_Debug=dist/Debug/Cygwin-Windows
-CND_ARTIFACT_NAME_Debug=project2_hearts_v1_backup
-CND_ARTIFACT_PATH_Debug=dist/Debug/Cygwin-Windows/project2_hearts_v1_backup
+CND_ARTIFACT_NAME_Debug=project2_hearts_v2
+CND_ARTIFACT_PATH_Debug=dist/Debug/Cygwin-Windows/project2_hearts_v2
 CND_PACKAGE_DIR_Debug=dist/Debug/Cygwin-Windows/package
-CND_PACKAGE_NAME_Debug=project2heartsv1backup.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/Cygwin-Windows/package/project2heartsv1backup.tar
+CND_PACKAGE_NAME_Debug=project2heartsv2.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/Cygwin-Windows/package/project2heartsv2.tar
 #
 # include compiler specific variables
 #
