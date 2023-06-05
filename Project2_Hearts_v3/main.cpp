@@ -1,7 +1,7 @@
 /* 
  * File:   main.cpp
  * Author: Stephanie Peacock
- * Created on June 1, 2023, 6:30 PM
+ * Created on June 4, 2023, 4:45 PM
  * Purpose: Play a game of Hearts vs the Three Stooges.
  */
 

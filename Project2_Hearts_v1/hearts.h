@@ -1,12 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/cppFiles/file.h to edit this template
- */
-
 /* 
  * File:   hearts.h
- * Author: Daenerys
- *
+ * Author: Stephanie Peacock
  * Created on June 1, 2023, 6:41 PM
  */
 
