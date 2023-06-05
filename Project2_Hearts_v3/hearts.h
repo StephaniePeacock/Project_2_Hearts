@@ -20,7 +20,12 @@ struct Player {
     int hand[13];
     int choice;
     string cards[13];
+    bool match;
+    int tScore;
 };
+
+
+
 
 // Input function prototypes
 void shuffle(int [], const unsigned short, string[]);
@@ -34,8 +39,13 @@ void set(Player &, int&, int[]);
 void unset(Player &, int&, int[], string[], int&);
 void npcUn(Player &, int &, int[], string[]);
 void played(Player &, string, int, string[]);
-bool linSrch(int[],const unsigned short,int&);
-void playCard(Player&, Player&, Player&, Player&, int&, int, int [], string, int); 
+int linSrch(int[],const unsigned short,int&);
+void playCard(Player&, Player&, Player&, Player&, int&, int&, int [], string, int, bool&); 
+void trick( Player&, Player&, Player&, Player&,
+            int, int, int, int,
+            int&, int&, int&, int&,
+            int&, int&, int&, int&,
+            bool ,bool ,bool ,bool);
 
 #endif /* HEARTS_H */
 
