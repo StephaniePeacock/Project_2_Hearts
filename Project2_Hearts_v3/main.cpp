@@ -297,7 +297,7 @@ int main(int argc, char** argv) {
                 if(confirm == 'N' or confirm == 'n') {
                     exit(0);
                 }
-            }while(confirm != 'Y' || confirm != 'y' || confirm != 'N' || confirm != 'n');
+            }while(confirm != 'Y' && confirm != 'y' && confirm != 'N' && confirm != 'n');
     
     } while (player.score < 50 && larry.score < 50 && curly.score < 50 && moe.score <50);
     cout << endl;
