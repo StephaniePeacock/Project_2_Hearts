@@ -39,6 +39,9 @@ int main(int argc, char** argv) {
     int fv[HAND] = {1,2,3,4,5,6,7,8,9,10,11,12,13};    
     int count = 0;
     int indx;
+    int wins;
+    int total;
+    float winLoss;
     // Displays Face Values of cards - Aces High
     char face[SUITS][HAND] = {{'2','3','4','5','6','7','8','9','T','J','Q','K','A'},
                               {'2','3','4','5','6','7','8','9','T','J','Q','K','A'},
@@ -54,21 +57,39 @@ int main(int argc, char** argv) {
     Player player, larry, curly, moe;
     larry.name = "Larry";
     curly.name = "Curly";
-    moe.name = "Moe";    
+    moe.name = "Moe";  
+    player.score = larry.score = curly.score = moe.score = 0;
 
-    // put the outer do while loop for the game here
+    // Open file & read current win / total 
+    ifstream inWins("wins.txt");
+    inWins >> wins >> total;
+    // Close the file for at the end!
+    inWins.close();
     
-    //Initialize indx & get player's name
-    indx = 0;   // used for the linear search to find 2 of clubs - reset to 0 each hand
-    cout << "\"Hey buddy, we need a fourth player!" << endl
+    // Make sure we don't divide by 0!
+    if(total != 0 ) {
+        // Previous games have been played - output the ratio
+        winLoss = (wins/static_cast<float>(total)) * 100;    
+        cout << "It looks like you have played before. You have won " << fixed << setprecision(2) << winLoss << "% of the games you have played." << endl;
+    }
+    else{
+        cout << "\"Hey buddy, we need a fourth player!" << endl
             << " Join us for a game of Hearts?" << endl
             << " My name is Larry, this is my good friend Curly," << endl
             << " and that's his brother, Moe.\"" << endl << endl;
-    cout << "\"So what's your name?\"" << endl;
-    cin >> player.name;
-    cout << "\"Alright " << player.name << ", let's play Hearts! I'll deal.\"" << endl;
-    // Assign face values
+           cout << "\"So what's your name?\"" << endl;
+        cin >> player.name;
+        cout << "\"Alright " << player.name << ", let's play Hearts! I'll deal.\"" << endl;
+    }
+     // Assign face values
     faceVal(show,face,suit,SUITS,HAND);
+    // put the outer do while loop for the game here
+    do {
+    //Initialize indx 
+    indx = 0;   // used for the linear search to find 2 of clubs - reset to 0 each hand
+  
+    // Set initial trick scores to 0 & match to false
+    player.tScore = larry.tScore = curly.tScore = moe.tScore = 0;
     // Shuffle the deck
     shuffle(deck, NCARDS, show);
     // Deal cards
@@ -81,19 +102,23 @@ int main(int argc, char** argv) {
     // Loop to play the hand
     for (int i = 0; i < 13; i++) {
         // used for the linear search to find 2 of clubs - resets to 0 each hand
-        indx = 0;   
+        indx = 0;
+
         // For the first trick, find the player with 2 of clubs
         if(i == 0) {
-            linSrch(deck,NCARDS,indx);
+            linSrch(deck,NCARDS,indx);    
+
             if     (indx < 13)              { player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3; }
             else if(indx > 12 && indx < 26) { player.order = 3; larry.order = 0; curly.order = 1; moe.order = 2; }
             else if(indx > 25 && indx < 39) { player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1; }
             else                            { player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0; }
+           
         }
+        // reset match
+        player.match = larry.match = curly.match = moe.match = false;
         // Loop 4 times with If/Else to play trick
         for(int trick = 0; trick < 4; trick++){
-            // Set initial trick scores to 0
-            player.tScore = larry.tScore = curly.tScore = moe.tScore = 0;
+            
         //Player's Turn    
             if (player.order == trick) {         
             // Print player's cards
@@ -107,83 +132,70 @@ int main(int argc, char** argv) {
                         cout << "Please play 2\u2663: ";
                         cin >> player.choice; 
                 }
+                if(player.order == 0){
+                    player.match = true;
+                }
                 // Add suit validation
                 // Check for Clubs
                     if((larry.order == 0 && larry.choice < 14) ||
                        (curly.order == 0 && curly.choice < 14) ||
                        (moe.order == 0 && moe.choice < 14)) {
-                        while((player.choice == 1 && player.hand[0] > 13) ||
-                              (player.choice == 2 && player.hand[1] > 13) ||
-                              (player.choice == 3 && player.hand[2] > 13) ||
-                              (player.choice == 4 && player.hand[3] > 13) ||
-                              (player.choice == 5 && player.hand[4] > 13) ||
-                              (player.choice == 6 && player.hand[5] > 13) ||
-                              (player.choice == 7 && player.hand[6] > 13) ||
-                              (player.choice == 8 && player.hand[7] > 13) ||
-                              (player.choice == 9 && player.hand[8] > 13) ||
-                              (player.choice == 10&& player.hand[9] > 13) ||
-                              (player.choice == 11&& player.hand[10]> 13)) {
-                                    cout << "Please play \u2663: ";
-                                    cin >> player.choice;     
+                       for(int i = 0; i < 12; i++) {
+                           int vc = i+1;
+
+                            while(player.choice == vc && player.hand[i] != 0 && (player.hand[i] >13 && player.hand[i+1] < 13 )) {
+
+                                        cout << "Please play \u2663: ";
+                                        cin >> player.choice;     
+                            }
+                            player.match = true;
                         }
                     }
                 // Check for Diamonds
                     if((larry.order == 0 && larry.choice > 13 && larry.choice < 27) ||
                        (curly.order == 0 && curly.choice > 13 && curly.choice < 27) ||
-                       (moe.order == 0 && moe.choice > 13 && moe.choice < 27)) {                          
-                        while((player.choice == 1 && player.hand[0] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 2 && player.hand[1] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 3 && player.hand[2] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 4 && player.hand[3] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 5 && player.hand[4] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 6 && player.hand[5] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 7 && player.hand[6] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 8 && player.hand[7] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 9 && player.hand[8] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 10&& player.hand[9] < 14 && player.hand[0] > 26) ||
-                              (player.choice == 11&& player.hand[10]< 14 && player.hand[0] > 26)) {
-                                    cout << "Please play \u2662: ";
-                                    cin >> player.choice;
+                       (moe.order == 0 && moe.choice > 13 && moe.choice < 27)) { 
+                        for(int i = 0; i < 12; i++) {
+                           int vc = i+1;
+                        
+                            while(player.choice == vc && player.hand[i] !=0 && (player.hand[i] <14 && player.hand[i] >26 && player.hand[i+1] >13 && player.hand[i+1] <27)) {
+                                        cout << "Please play \u2662: ";
+                                        cin >> player.choice;
+                            }
+                            player.match = true;
                         }
                     }
                 // Check for Spades
                     if((larry.order == 0 && larry.choice > 26 && larry.choice < 40) ||
                        (curly.order == 0 && curly.choice > 26 && curly.choice < 40) ||
-                       (moe.order == 0 && moe.choice > 26 && moe.choice < 40)) {                          
-                        while((player.choice == 1 && player.hand[0] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 2 && player.hand[1] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 3 && player.hand[2] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 4 && player.hand[3] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 5 && player.hand[4] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 6 && player.hand[5] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 7 && player.hand[6] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 8 && player.hand[7] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 9 && player.hand[8] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 10&& player.hand[9] < 27 && player.hand[0] > 39) ||
-                              (player.choice == 11&& player.hand[10]< 27 && player.hand[0] > 39)) {
+                       (moe.order == 0 && moe.choice > 26 && moe.choice < 40)) { 
+                        for(int i = 0; i < 12; i++) {
+                           int vc = i+1;
+                        
+                            while(player.choice == vc && player.hand[i] !=0 && (player.hand[i] <27 && player.hand[i] >39 && player.hand[i+1] >26 && player.hand[i+1] <40)) {
+                        
                                     cout << "Please play \u2660: ";
                                     cin >> player.choice;
-                        }               
+                            }
+                        player.match = true;
+                        }
                     }
                 // Check for hearts
                     if((larry.order == 0 && larry.choice > 39) ||
                        (curly.order == 0 && curly.choice > 39) ||
-                       (moe.order == 0 && moe.choice > 39)) {                   
-                        while((player.hand[0] < 39 && player.choice == 1) ||
-                              (player.choice == 2 && player.hand[1] < 39) ||
-                              (player.choice == 3 && player.hand[2] < 39) ||
-                              (player.choice == 4 && player.hand[3] < 39) ||
-                              (player.choice == 5 && player.hand[4] < 39) ||
-                              (player.choice == 6 && player.hand[5] < 39) ||
-                              (player.choice == 7 && player.hand[6] < 39) ||
-                              (player.choice == 8 && player.hand[7] < 39) ||
-                              (player.choice == 9 && player.hand[8] < 39) ||
-                              (player.choice == 10&& player.hand[9] < 39) ||
-                              (player.choice == 11&& player.hand[10]< 39)) {
+                       (moe.order == 0 && moe.choice > 39)) { 
+                        
+                        for(int i = 0; i < 12; i++) {
+                           int vc = i+1;
+                        
+                            while(player.choice == vc && player.hand[i] !=0 && (player.hand[i] <40 && player.hand[i+1] >39)) {
+                       
                                     cout << "Please play \u2661: ";
                                     cin >> player.choice; 
-                        }                
-                }                                     
+                            }
+                        player.match = true;
+                        }
+                    }
             } while ((player.choice < 1 || player.choice > 13)    ||
                     (player.choice == 1  && player.hand[0]  == 0) ||
                     (player.choice == 2  && player.hand[1]  == 0) ||
@@ -206,8 +218,8 @@ int main(int argc, char** argv) {
             set(player, player.choice, player.hand);       
         // Larry's Turn        
             } else if (larry.order == trick) {
-                cout << "Larry's cards";
-                print(larry, larry.hand, larry.cards, HAND, larry.choice, count);
+            //    cout << "Larry's cards";
+            //    print(larry, larry.hand, larry.cards, HAND, larry.choice, count);
                 playCard(larry,curly,moe, player, larry.choice, larry.order, larry.hand, larry.name, trick, larry.match);
                 // Output the card played
                 played(larry, larry.name, larry.choice, larry.cards);
@@ -215,8 +227,8 @@ int main(int argc, char** argv) {
                 set(larry, larry.choice, larry.hand);
         // Curly's Turn        
             }else if(curly.order == trick) { 
-                cout << "Curly's cards";
-                print(curly, curly.hand, curly.cards, HAND, curly.choice, count);
+            //    cout << "Curly's cards";
+            //    print(curly, curly.hand, curly.cards, HAND, curly.choice, count);
                 playCard(larry,curly,moe, player, curly.choice, curly.order, curly.hand, curly.name, trick, curly.match);
                 // Output the card played
                 played(curly, curly.name, curly.choice, curly.cards);
@@ -224,8 +236,8 @@ int main(int argc, char** argv) {
                 set(curly, curly.choice, curly.hand);
         // Moe's Turn        
             }else if(moe.order == trick) {
-                cout << "Moe's cards"<< endl;
-                print(moe, moe.hand, moe.cards, HAND, moe.choice, count); 
+            //    cout << "Moe's cards"<< endl;
+            //    print(moe, moe.hand, moe.cards, HAND, moe.choice, count); 
                 playCard(larry,curly,moe, player, moe.choice, moe.order, moe.hand, moe.name, trick, moe.match);
                 // Output the card played
                 played(moe, moe.name, moe.choice, moe.cards);
@@ -247,7 +259,52 @@ int main(int argc, char** argv) {
 
 
         }
-
+    
+    count = 0;
+    // Shuffle the deck
+    shuffle(deck, NCARDS, show);
+    // Deal cards
+    deal(player, larry, curly, moe, deck, show);
+    //Sort each player's Hand
+    bSort(player, player.hand, HAND, player.cards);
+    sSort(larry, larry.hand, HAND, larry.cards);
+    mSort(curly, curly.hand, HAND, curly.cards);
+    mSort(moe, moe.hand, HAND, moe.cards);
+    
+            // Check for Shooting the Moon
+        player.tScore == 26 ? player.tScore = 0, larry.tScore = 26, curly.tScore = 26, moe.tScore = 26,cout << "Hey, Wiseguy! You shot the moon! The Stooges takes all points." << endl << endl :
+        larry.tScore == 26 ? larry.tScore = 0, player.tScore = 26, curly.tScore = 26, moe.tScore = 26, cout << "Larry shot the moon! The rest of you schmucks can take the points."  << endl << endl :
+        curly.tScore == 26 ? curly.tScore = 0, player.tScore = 26, larry.tScore = 26, moe.tScore = 26, cout << "Curly shot the moon! The rest of you schmucks can take the points."  << endl << endl :
+        moe.tScore == 26 ? moe.tScore = 0, player.tScore = 26, curly.tScore = 26, larry.tScore = 26, cout << "Larry shot the moon! The rest of you schmucks can take the points."  << endl << endl :    
+        cout << endl << "What a fun hand!" << endl << endl;
+    
+    
+    
+    player.score += player.tScore;
+    larry.score += larry.tScore;
+    curly.score += curly.tScore;
+    moe.score += moe.tScore;
+    
+            cout << "The current game score is:" << endl
+             << "Player   : " << player.score << endl
+             << "Larry    : " << larry.score << endl
+             << "Curly    : " << curly.score << endl
+             << "Moe      : " << moe.score << endl       ;
+    
+    } while (player.score < 50 && larry.score < 50 && curly.score < 50 && moe.score <50);
+    cout << endl;
+    if (player.score < larry.score && player.score < curly.score && player.score < moe.score) { wins++, cout << "You won the game!" << endl; }
+    else {total++, cout << "You lost the game. Better luck next time!" << endl; }
+    
+    // Let them know how good they are
+    winLoss = (wins/static_cast<float>(total)) * 100;
+    
+    cout << "You have won " << fixed << setprecision(2) << winLoss << "% of the games you have played." << endl;
+    
+    // Record win ratio to file
+    ofstream outWins("wins.txt");
+    outWins << wins << " " << total;
+    outWins.close();
 
     return 0;
 }
@@ -501,8 +558,6 @@ void playCard(Player& larry,Player& curly,Player& moe, Player& player, int& choi
         }
     }
 }
-
-
 void unset(Player &, int &choice, int hand[], string cards[], int &count){
     // Set choice back to the card number instead of card value & set used card to 0
     choice == hand[0]  ? choice = 1  : choice == hand[1]  ? choice = 2  : 
@@ -580,29 +635,42 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1;
                 }
                 // Moe wins trick
-                else if (moe.choice > player.choice && moe.choice > curly.choice && moe.choice > larry.choice){
+                else {
                     cout << "Moe takes the trick." << endl;
                     larry.tScore += 4;
                     player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0;
                 }
             }    
+              
+
             // Three Play Hearts
+
             else if ((player.choice > 39 && larry.choice > 39 && curly.choice > 39) ||
                 (player.choice > 39 && larry.choice > 39 && moe.choice   > 39) ||
                 (player.choice > 39 && curly.choice > 39 && moe.choice   > 39) ||
                 (larry.choice  > 39 && curly.choice > 39 && moe.choice   > 39)){
+                // No Queen Spades Played
                 if(player.choice != 37 && larry.choice != 37 && curly.choice != 37 && moe.choice != 37) {
                     cout << "Trick worth three points." << endl;    
                 }
-                else if(player.choice == 37 || larry.choice == 37 || curly.choice == 37 || moe.choice == 37) {
-                    cout << "Trick worth twenty-nine points." << endl;    
+                // Queen of Spades Played
+                else if(larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ) {
+                    cout << "Trick worth sixteen points." << endl;    
                 }
                 // Player wins trick
-                if (player.match == true && player.choice > larry.choice && player.choice > curly.choice && player.choice > moe.choice) {
+                if((player.order == 0 && larry.match == true && curly.match == true && player.choice > larry.choice && player.choice > curly.choice) ||
+                   (player.order == 0 && curly.match == true && moe.match == true && player.choice > curly.choice && player.choice > moe.choice) ||
+                   (player.order == 0 && larry.match == true && moe.match == true && player.choice > larry.choice && player.choice > moe.choice) ||
+                   (larry.order = 0 && curly.match == true && player.match == true && player.choice > larry.choice && player.choice > curly.choice) ||
+                   (larry.order = 0 && moe.match == true && player.match == true &&player.choice > larry.choice && player.choice > moe.choice) ||
+                   (curly.order = 0 && larry.match == true && player.match == true &&player.choice > larry.choice && player.choice > curly.choice) ||
+                   (curly.order = 0 && moe.match == true && player.match == true &&player.choice > curly.choice && player.choice > curly.choice) ||
+                   (moe.order = 0 && curly.match == true && player.match == true &&player.choice > moe.choice && player.choice > curly.choice) ||
+                   (moe.order = 0 && larry.match == true && player.match == true &&player.choice > larry.choice && player.choice > moe.choice)) {
                     cout << "Player takes the trick." << endl;
                     // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37){
-                        player.tScore += 29;
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37){
+                        player.tScore += 16;
                         player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3;
                     }
                     // No one played Q spades
@@ -612,132 +680,213 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }
                 }
                 // Larry wins trick
-                else if (larry.match == true && larry.choice > player.choice && larry.choice > curly.choice && larry.choice > moe.choice){
-                    cout << "Larry takes the trick." << endl;
-                    // Check for Q spades
-                    if (player.choice == 37 || curly.choice == 37 || moe.choice == 37){
-                        larry.tScore += 29;
-                        player.order = 3; larry.order = 0; curly.order = 1; moe.order = 2;
+                else if((larry.order == 0 && player.match == true && curly.match == true && larry.choice > player.choice && larry.choice > curly.choice) ||
+                       (larry.order == 0 && curly.match == true && moe.match == true && larry.choice > curly.choice && larry.choice > moe.choice) ||
+                       (larry.order == 0 && player.match == true && moe.match == true && larry.choice > player.choice && larry.choice > moe.choice) ||
+                       (player.order = 0 && curly.match == true && larry.match == true && larry.choice > player.choice && larry.choice > curly.choice) ||
+                       (player.order = 0 && moe.match == true && larry.match == true && larry.choice > player.choice && larry.choice > moe.choice) ||
+                       (curly.order = 0 && player.match == true && larry.match == true && larry.choice > player.choice && larry.choice > curly.choice) ||
+                       (curly.order = 0 && moe.match == true && larry.match == true && larry.choice > curly.choice && larry.choice > curly.choice) ||
+                       (moe.order = 0 && curly.match == true && larry.match == true && larry.choice > moe.choice && larry.choice > curly.choice) ||
+                       (moe.order = 0 && player.match == true && larry.match == true && larry.choice > player.choice && larry.choice > moe.choice)) {
+                
+                        cout << "larry takes the trick." << endl;
+                        // Check for Q spades
+                        if (player.choice == 37 || curly.choice == 37 || moe.choice == 37 || larry.choice == 37){
+                            larry.tScore += 16;
+                            larry.order = 0; player.order = 1; curly.order = 2; moe.order = 3;
+                        }
+                        // No one played Q spades
+                        else {
+                            larry.tScore += 3;
+                            larry.order = 0; player.order = 1; curly.order = 2; moe.order = 3;
+                        }
                     }
-                    // No one played Q spades
-                    else {
-                        larry.tScore += 3;
-                        player.order = 3; larry.order = 0; curly.order = 1; moe.order = 2;
-                    }                    
-                }
-                // Curly wins trick
-                else if (curly.match == true && curly.choice > player.choice && curly.choice > larry.choice && curly.choice > moe.choice){
-                    cout << "Curly takes the trick." << endl;
-                    // Check for Q spades
-                    if (larry.choice == 37 || player.choice == 37 || moe.choice == 37){
-                        curly.tScore += 29;
-                        player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1;
+                // curly wins trick
+                else if((curly.order == 0 && player.match == true && larry.match == true && curly.choice > player.choice && curly.choice > larry.choice) ||
+                       (curly.order == 0 && larry.match == true && moe.match == true && curly.choice > larry.choice && curly.choice > moe.choice) ||
+                       (curly.order == 0 && player.match == true && moe.match == true && curly.choice > player.choice && curly.choice > moe.choice) ||
+                       (player.order = 0 && larry.match == true && curly.match == true && curly.choice > player.choice && curly.choice > larry.choice) ||
+                       (player.order = 0 && moe.match == true && curly.match == true && curly.choice > player.choice && curly.choice > moe.choice) ||
+                       (larry.order = 0 && player.match == true && curly.match == true && curly.choice > player.choice && curly.choice > larry.choice) ||
+                       (larry.order = 0 && moe.match == true && curly.match == true && curly.choice > larry.choice && curly.choice > larry.choice) ||
+                       (moe.order = 0 && larry.match == true && curly.match == true && curly.choice > moe.choice && curly.choice > larry.choice) ||
+                       (moe.order = 0 && player.match == true && curly.match == true && curly.choice > player.choice && curly.choice > moe.choice)) {
+                
+                        cout << "curly takes the trick." << endl;
+                        // Check for Q spades
+                        if (player.choice == 37 || larry.choice == 37 || moe.choice == 37 || curly.choice == 37){
+                            curly.tScore += 16;
+                            curly.order = 0; player.order = 1; larry.order = 2; moe.order = 3;
+                        }
+                        // No one played Q spades
+                        else {
+                            curly.tScore += 3;
+                            curly.order = 0; player.order = 1; larry.order = 2; moe.order = 3;
+                        }
                     }
-                    // No one played Q spades
-                    else {
-                        curly.tScore += 3;
-                        player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1;
+                // moe wins trick
+                else if((moe.order == 0 && player.match == true && larry.match == true && moe.choice > player.choice && moe.choice > larry.choice) ||
+                       (moe.order == 0 && larry.match == true && curly.match == true && moe.choice > larry.choice && moe.choice > curly.choice) ||
+                       (moe.order == 0 && player.match == true && curly.match == true && moe.choice > player.choice && moe.choice > curly.choice) ||
+                       (player.order = 0 && larry.match == true && moe.match == true && moe.choice > player.choice && moe.choice > larry.choice) ||
+                       (player.order = 0 && curly.match == true && moe.match == true && moe.choice > player.choice && moe.choice > curly.choice) ||
+                       (larry.order = 0 && player.match == true && moe.match == true && moe.choice > player.choice && moe.choice > larry.choice) ||
+                       (larry.order = 0 && curly.match == true && moe.match == true && moe.choice > larry.choice && moe.choice > larry.choice) ||
+                       (curly.order = 0 && larry.match == true && moe.match == true && moe.choice > curly.choice && moe.choice > larry.choice) ||
+                       (curly.order = 0 && player.match == true && moe.match == true && moe.choice > player.choice && moe.choice > curly.choice)) {
+                
+                        cout << "moe takes the trick." << endl;
+                        // Check for Q spades
+                        if (player.choice == 37 || larry.choice == 37 || curly.choice == 37 || moe.choice == 37){
+                            moe.tScore += 16;
+                            moe.order = 0; player.order = 1; larry.order = 2; curly.order = 3;
+                        }
+                        // No one played Q spades
+                        else {
+                            moe.tScore += 3;
+                            moe.order = 0; player.order = 1; larry.order = 2; curly.order = 3;
+                        }
                     }
-                }
-                // Moe wins trick
-                else if (moe.match == true && moe.choice > player.choice && moe.choice > curly.choice && moe.choice > larry.choice){
-                    cout << "Moe takes the trick." << endl;
-                    // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || player.choice == 37){
-                        moe.tScore += 29;
-                        player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0;
-                    }
-                    // No one played Q spades
-                    else {
-                        moe.tScore += 3;
-                        player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0;
-                    }
-                }
-            }            
-            // Two Play Hearts
+                }           
+// Two Play Hearts
             else if ((player.choice > 39 && larry.choice > 39) ||
                 (player.choice > 39 && curly.choice > 39) ||
                 (player.choice > 39 && moe.choice > 39)   ||
                 (larry.choice > 39 && curly.choice > 39)  ||
                 (larry.choice > 39 && moe.choice > 39)    ||
                 (curly.choice > 39 && moe.choice > 39)){
+        // No Queen Spades played
                 if(player.choice != 37 && larry.choice != 37 && curly.choice != 37 && moe.choice != 37) {
                     cout << "Trick worth two points." << endl;    
                 }
-                else if(player.choice == 37 || larry.choice == 37 || curly.choice == 37 || moe.choice == 37) {
-                    cout << "Trick worth twenty-eight points." << endl;    
+                else if(larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ) {
+                    cout << "Trick worth fifteen  points." << endl;    
                 }
-                // Player wins trick
-                if (player.match == true && player.choice > larry.choice && player.choice > curly.choice && player.choice > moe.choice) {
-                    cout << "Player takes the trick." << endl;
-                    // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37){
-                        player.tScore += 28;
-                        player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3;
+            // player wins trick
+                    if((player.order == 0 && player.choice > 39 && larry.choice > 39 && player.choice > larry.choice) ||
+                       (player.order == 0 && player.choice > 39 && curly.choice > 39 && player.choice > curly.choice) ||
+                       (player.order == 0 && player.choice > 39 && moe.choice > 39 && player.choice > moe.choice) ||
+                       (player.order == 0 && player.choice < 40 && larry.choice > 39 && curly.choice > 39) ||
+                       (player.order == 0 && player.choice < 40 && larry.choice > 39 && moe.choice > 39) ||
+                       (player.order == 0 && player.choice < 40 && moe.choice > 39 && curly.choice > 39) ||
+                       (moe.order == 0 && moe.choice > 39 && player.match == true && player.choice > moe.choice) ||
+                       (larry.order == 0 && larry.choice > 39 && player.match == true && player.choice > larry.choice) ||
+                       (curly.order == 0 && curly.choice > 39 && player.match == true && player.choice > curly.choice)) {
+                
+                        cout << "player takes the trick." << endl;
+                        // Check for Q spades
+                        if (moe.choice == 37 || larry.choice == 37 || curly.choice == 37 || player.choice == 37){
+                            player.tScore += 15;
+                            player.order = 0; moe.order = 1; larry.order = 2; curly.order = 3;
+                        }
+                        // No one played Q spades
+                        else {
+                            player.tScore += 2;
+                            player.order = 0; moe.order = 1; larry.order = 2; curly.order = 3;
+                        }
                     }
-                    // No one played Q spades
-                    else {
-                        player.tScore += 2;
-                        player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3;
+            // larry wins trick
+                else if((larry.order == 0 && larry.choice > 39 && player.choice > 39 && larry.choice > player.choice) ||
+                       (larry.order == 0 && larry.choice > 39 && curly.choice > 39 && larry.choice > curly.choice) ||
+                       (larry.order == 0 && larry.choice > 39 && moe.choice > 39 && larry.choice > moe.choice) ||
+                       (larry.order == 0 && larry.choice < 40 && player.choice > 39 && curly.choice > 39) ||
+                       (larry.order == 0 && larry.choice < 40 && player.choice > 39 && moe.choice > 39) ||
+                       (larry.order == 0 && larry.choice < 40 && moe.choice > 39 && curly.choice > 39) ||
+                       (moe.order == 0 && moe.choice > 39 && larry.match == true && larry.choice > moe.choice) ||
+                       (player.order == 0 && player.choice > 39 && larry.match == true && larry.choice > player.choice) ||
+                       (curly.order == 0 && curly.choice > 39 && larry.match == true && larry.choice > curly.choice)) {
+                
+                        cout << "larry takes the trick." << endl;
+                        // Check for Q spades
+                        if (moe.choice == 37 || player.choice == 37 || curly.choice == 37 || larry.choice == 37){
+                            larry.tScore += 15;
+                            larry.order = 0; moe.order = 1; player.order = 2; curly.order = 3;
+                        }
+                        // No one played Q spades
+                        else {
+                            larry.tScore += 2;
+                            larry.order = 0; moe.order = 1; player.order = 2; curly.order = 3;
+                        }
+                    }
+            // curly wins trick
+                else if((curly.order == 0 && curly.choice > 39 && player.choice > 39 && curly.choice > player.choice) ||
+                       (curly.order == 0 && curly.choice > 39 && larry.choice > 39 && curly.choice > larry.choice) ||
+                       (curly.order == 0 && curly.choice > 39 && moe.choice > 39 && curly.choice > moe.choice) ||
+                       (curly.order == 0 && curly.choice < 40 && player.choice > 39 && larry.choice > 39) ||
+                       (curly.order == 0 && curly.choice < 40 && player.choice > 39 && moe.choice > 39) ||
+                       (curly.order == 0 && curly.choice < 40 && moe.choice > 39 && larry.choice > 39) ||
+                       (moe.order == 0 && moe.choice > 39 && curly.match == true && curly.choice > moe.choice) ||
+                       (player.order == 0 && player.choice > 39 && curly.match == true && curly.choice > player.choice) ||
+                       (larry.order == 0 && larry.choice > 39 && curly.match == true && curly.choice > larry.choice)) {
+                
+                        cout << "curly takes the trick." << endl;
+                        // Check for Q spades
+                        if (moe.choice == 37 || player.choice == 37 || larry.choice == 37 || curly.choice == 37){
+                            curly.tScore += 15;
+                            curly.order = 0; moe.order = 1; player.order = 2; larry.order = 3;
+                        }
+                        // No one played Q spades
+                        else {
+                            curly.tScore += 2;
+                            curly.order = 0; moe.order = 1; player.order = 2; larry.order = 3;
+                        }
+                    }
+                    // moe wins trick
+                else if((moe.order == 0 && moe.choice > 39 && player.choice > 39 && moe.choice > player.choice) ||
+                       (moe.order == 0 && moe.choice > 39 && larry.choice > 39 && moe.choice > larry.choice) ||
+                       (moe.order == 0 && moe.choice > 39 && curly.choice > 39 && moe.choice > curly.choice) ||
+                       (moe.order == 0 && moe.choice < 40 && player.choice > 39 && larry.choice > 39) ||
+                       (moe.order == 0 && moe.choice < 40 && player.choice > 39 && curly.choice > 39) ||
+                       (moe.order == 0 && moe.choice < 40 && curly.choice > 39 && larry.choice > 39) ||
+                       (curly.order == 0 && curly.choice > 39 && moe.match == true && moe.choice > curly.choice) ||
+                       (player.order == 0 && player.choice > 39 && moe.match == true && moe.choice > player.choice) ||
+                       (larry.order == 0 && larry.choice > 39 && moe.match == true && moe.choice > larry.choice)) {
+                
+                        cout << "moe takes the trick." << endl;
+                        // Check for Q spades
+                        if (curly.choice == 37 || player.choice == 37 || larry.choice == 37 || moe.choice == 37){
+                            moe.tScore += 15;
+                            moe.order = 0; curly.order = 1; player.order = 2; larry.order = 3;
+                        }
+                        // No one played Q spades
+                        else {
+                            moe.tScore += 2;
+                            moe.order = 0; curly.order = 1; player.order = 2; larry.order = 3;
+                        }
                     }
                 }
-                // Larry wins trick
-                else if (larry.match == true && larry.choice > player.choice && larry.choice > curly.choice && larry.choice > moe.choice){
-                    cout << "Larry takes the trick." << endl;
-                    // Check for Q spades
-                    if (player.choice == 37 || curly.choice == 37 || moe.choice == 37){
-                        larry.tScore += 28;
-                        player.order = 3; larry.order = 0; curly.order = 1; moe.order = 2;
-                    }
-                    // No one played Q spades
-                    else {
-                        larry.tScore += 2;
-                        player.order = 3; larry.order = 0; curly.order = 1; moe.order = 2;
-                    }                    
-                }
-                // Curly wins trick
-                else if (curly.match == true && curly.choice > player.choice && curly.choice > larry.choice && curly.choice > moe.choice){
-                    cout << "Curly takes the trick." << endl;
-                    // Check for Q spades
-                    if (larry.choice == 37 || player.choice == 37 || moe.choice == 37){
-                        curly.tScore += 28;
-                        player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1;
-                    }
-                    // No one played Q spades
-                    else {
-                        curly.tScore += 2;
-                        player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1;
-                    }
-                }
-                // Moe wins trick
-                else if (moe.match == true && moe.choice > player.choice && moe.choice > curly.choice && moe.choice > larry.choice){
-                    cout << "Moe takes the trick." << endl;
-                    // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || player.choice == 37){
-                        moe.tScore += 28;
-                        player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0;
-                    }
-                    // No one played Q spades
-                    else {
-                        moe.tScore += 2;
-                        player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0;
-                    }
-                }
-            }
-            // One person played a heart
+// One person played a heart
             else if (player.choice > 39 || larry.choice > 39 || curly.choice > 39 || moe.choice > 39) {
+            // No Queen spades played
                 if(player.choice != 37 && larry.choice != 37 && curly.choice != 37 && moe.choice != 37) {
                     cout << "Trick worth one point." << endl;    
                 }
-                else if(player.choice == 37 || larry.choice == 37 || curly.choice == 37 || moe.choice == 37) {
-                    cout << "Trick worth twenty-seven points." << endl;    
+                else if(larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ) {
+                    cout << "Trick worth fourteen points." << endl;    
                 }
                 // Player wins trick
-                if (player.match == true && player.choice > larry.choice && player.choice > curly.choice && player.choice > moe.choice) {
+                if((player.order == 0 && player.choice > 39 && larry.choice < 40 && curly.choice < 40 && moe.choice < 40) ||
+                   (player.order == 0 && player.choice < 40 && larry.choice > 39 && (curly.match == true && moe.match == true && player.choice > curly.choice && player.choice > moe.choice) || (curly.match == true && moe.match == false && moe.choice < 40 && player.choice > curly.choice) || (moe.match == true && curly.match == false && curly.choice < 40 && player.choice > moe.choice)) ||
+                   (player.order == 0 && player.choice < 40 && curly.choice > 39 && (larry.match == true && moe.match == true && player.choice > larry.choice && player.choice > moe.choice) || (larry.match == true && moe.match == false && moe.choice < 40 && player.choice > larry.choice) || (moe.match == true && larry.match == false && larry.choice < 40 && player.choice > moe.choice)) ||	
+                   (player.order == 0 && player.choice < 40 && moe.choice > 39 && (larry.match == true && curly.match == true && player.choice > larry.choice && player.choice > curly.choice) || (larry.match == true && curly.match == false && curly.choice < 40 && player.choice > larry.choice) || (curly.match == true && larry.match == false && larry.choice < 40 && player.choice > curly.choice)) ||
+                   (larry.order == 0 && larry.choice < 40 && player.match == true && moe.match == true && curly.choice > 39 && player.choice > larry.choice && player.choice > moe.choice)  ||
+                   (larry.order == 0 && larry.choice < 40 && player.match == true && moe.match == false && moe.choice < 40 && curly.choice > 39 && player.choice > larry.choice && player.choice > moe.choice)  ||
+                   (larry.order == 0 && larry.choice < 40 && player.match == true && curly.match == true && moe.choice > 39 && player.choice > larry.choice && player.choice > curly.choice)||
+                   (larry.order == 0 && larry.choice < 40 && player.match == true && curly.match == false && curly.choice < 40 && moe.choice > 39 && player.choice > larry.choice && player.choice > curly.choice)||
+                   (curly.order == 0 && curly.choice < 40 && player.match == true && moe.match == true && larry.choice > 39 && player.choice > curly.choice && player.choice > moe.choice)  ||
+                   (curly.order == 0 && curly.choice < 40 && player.match == true && moe.match == false && moe.choice < 40 && larry.choice > 39 && player.choice > curly.choice && player.choice > moe.choice)  ||
+                   (curly.order == 0 && curly.choice < 40 && player.match == true && larry.match == true && moe.choice > 39 && player.choice > curly.choice && player.choice > larry.choice)||
+                   (curly.order == 0 && curly.choice < 40 && player.match == true && larry.match == false && larry.choice < 40 && moe.choice > 39 && player.choice > curly.choice && player.choice > larry.choice)||
+                   (moe.order == 0 && moe.choice < 40 && player.match == true && curly.match == true && larry.choice > 39 && player.choice > moe.choice && player.choice > curly.choice)  ||
+                   (moe.order == 0 && moe.choice < 40 && player.match == true && curly.match == false && curly.choice < 40 && larry.choice > 39 && player.choice > moe.choice && player.choice > curly.choice)  ||
+                   (moe.order == 0 && moe.choice < 40 && player.match == true && larry.match == true && curly.choice > 39 && player.choice > moe.choice && player.choice > larry.choice)||
+                   (moe.order == 0 && moe.choice < 40 && player.match == true && larry.match == false && larry.choice < 40 && curly.choice > 39 && player.choice > moe.choice && player.choice > larry.choice))
+                {
                     cout << "Player takes the trick." << endl;
                     // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37){
-                        player.tScore += 27;
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37){
+                        player.tScore += 14;
                         player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3;
                     }
                     // No one played Q spades
@@ -747,11 +896,27 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }
                 }
                 // Larry wins trick
-                else if (larry.match == true && larry.choice > player.choice && larry.choice > curly.choice && larry.choice > moe.choice){
+                else if((larry.order == 0 && larry.choice > 39 && player.choice < 40 && curly.choice < 40 && moe.choice < 40) ||
+                   (larry.order == 0 && larry.choice < 40 && player.choice > 39 && (curly.match == true && moe.match == true && larry.choice > curly.choice && larry.choice > moe.choice) || (curly.match == true && moe.match == false && moe.choice < 40 && larry.choice > curly.choice) || (moe.match == true && curly.match == false && curly.choice < 40 && larry.choice > moe.choice)) ||
+                   (larry.order == 0 && larry.choice < 40 && curly.choice > 39 && (player.match == true && moe.match == true && larry.choice > player.choice && larry.choice > moe.choice) || (player.match == true && moe.match == false && moe.choice < 40 && larry.choice > player.choice) || (moe.match == true && player.match == false && player.choice < 40 && larry.choice > moe.choice)) ||	
+                   (larry.order == 0 && larry.choice < 40 && moe.choice > 39 && (player.match == true && curly.match == true && larry.choice > player.choice && larry.choice > curly.choice) || (player.match == true && curly.match == false && curly.choice < 40 && larry.choice > player.choice) || (curly.match == true && player.match == false && player.choice < 40 && larry.choice > curly.choice)) ||
+                   (player.order == 0 && player.choice < 40 && larry.match == true && moe.match == true && curly.choice > 39 && larry.choice > player.choice && larry.choice > moe.choice)  ||
+                   (player.order == 0 && player.choice < 40 && larry.match == true && moe.match == false && moe.choice < 40 && curly.choice > 39 && larry.choice > player.choice && larry.choice > moe.choice)  ||
+                   (player.order == 0 && player.choice < 40 && larry.match == true && curly.match == true && moe.choice > 39 && larry.choice > player.choice && larry.choice > curly.choice)||
+                   (player.order == 0 && player.choice < 40 && larry.match == true && curly.match == false && curly.choice < 40 && moe.choice > 39 && larry.choice > player.choice && larry.choice > curly.choice)||
+                   (curly.order == 0 && curly.choice < 40 && larry.match == true && moe.match == true && player.choice > 39 && larry.choice > curly.choice && larry.choice > moe.choice)  ||
+                   (curly.order == 0 && curly.choice < 40 && larry.match == true && moe.match == false && moe.choice < 40 && player.choice > 39 && larry.choice > curly.choice && larry.choice > moe.choice)  ||
+                   (curly.order == 0 && curly.choice < 40 && larry.match == true && player.match == true && moe.choice > 39 && larry.choice > curly.choice && larry.choice > player.choice)||
+                   (curly.order == 0 && curly.choice < 40 && larry.match == true && player.match == false && player.choice < 40 && moe.choice > 39 && larry.choice > curly.choice && larry.choice > player.choice)||
+                   (moe.order == 0 && moe.choice < 40 && larry.match == true && curly.match == true && player.choice > 39 && larry.choice > moe.choice && larry.choice > curly.choice)  ||
+                   (moe.order == 0 && moe.choice < 40 && larry.match == true && curly.match == false && curly.choice < 40 && player.choice > 39 && larry.choice > moe.choice && larry.choice > curly.choice)  ||
+                   (moe.order == 0 && moe.choice < 40 && larry.match == true && player.match == true && curly.choice > 39 && larry.choice > moe.choice && larry.choice > player.choice)||
+                   (moe.order == 0 && moe.choice < 40 && larry.match == true && player.match == false && player.choice < 40 && curly.choice > 39 && larry.choice > moe.choice && larry.choice > player.choice))
+                {
                     cout << "Larry takes the trick." << endl;
                     // Check for Q spades
-                    if (player.choice == 37 || curly.choice == 37 || moe.choice == 37){
-                        larry.tScore += 27;
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ){
+                        larry.tScore += 14;
                         player.order = 3; larry.order = 0; curly.order = 1; moe.order = 2;
                     }
                     // No one played Q spades
@@ -761,11 +926,28 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }                    
                 }
                 // Curly wins trick
-                else if (curly.match == true && curly.choice > player.choice && curly.choice > larry.choice && curly.choice > moe.choice){
+                else if((curly.order == 0 && curly.choice > 39 && player.choice < 40 && larry.choice < 40 && moe.choice < 40) ||
+                   (curly.order == 0 && curly.choice < 40 && player.choice > 39 && (larry.match == true && moe.match == true && curly.choice > larry.choice && curly.choice > moe.choice) || (larry.match == true && moe.match == false && moe.choice < 40 && curly.choice > larry.choice) || (moe.match == true && larry.match == false && larry.choice < 40 && curly.choice > moe.choice)) ||
+                   (curly.order == 0 && curly.choice < 40 && larry.choice > 39 && (player.match == true && moe.match == true && curly.choice > player.choice && curly.choice > moe.choice) || (player.match == true && moe.match == false && moe.choice < 40 && curly.choice > player.choice) || (moe.match == true && player.match == false && player.choice < 40 && curly.choice > moe.choice)) ||	
+                   (curly.order == 0 && curly.choice < 40 && moe.choice > 39 && (player.match == true && larry.match == true && curly.choice > player.choice && curly.choice > larry.choice) || (player.match == true && larry.match == false && larry.choice < 40 && curly.choice > player.choice) || (larry.match == true && player.match == false && player.choice < 40 && curly.choice > larry.choice)) ||
+                   (player.order == 0 && player.choice < 40 && curly.match == true && moe.match == true && larry.choice > 39 && curly.choice > player.choice && curly.choice > moe.choice)  ||
+                   (player.order == 0 && player.choice < 40 && curly.match == true && moe.match == false && moe.choice < 40 && larry.choice > 39 && curly.choice > player.choice && curly.choice > moe.choice)  ||
+                   (player.order == 0 && player.choice < 40 && curly.match == true && larry.match == true && moe.choice > 39 && curly.choice > player.choice && curly.choice > larry.choice)||
+                   (player.order == 0 && player.choice < 40 && curly.match == true && larry.match == false && larry.choice < 40 && moe.choice > 39 && curly.choice > player.choice && curly.choice > larry.choice)||
+                   (larry.order == 0 && larry.choice < 40 && curly.match == true && moe.match == true && player.choice > 39 && curly.choice > larry.choice && curly.choice > moe.choice)  ||
+                   (larry.order == 0 && larry.choice < 40 && curly.match == true && moe.match == false && moe.choice < 40 && player.choice > 39 && curly.choice > larry.choice && curly.choice > moe.choice)  ||
+                   (larry.order == 0 && larry.choice < 40 && curly.match == true && player.match == true && moe.choice > 39 && curly.choice > larry.choice && curly.choice > player.choice)||
+                   (larry.order == 0 && larry.choice < 40 && curly.match == true && player.match == false && player.choice < 40 && moe.choice > 39 && curly.choice > larry.choice && curly.choice > player.choice)||
+                   (moe.order == 0 && moe.choice < 40 && curly.match == true && larry.match == true && player.choice > 39 && curly.choice > moe.choice && curly.choice > larry.choice)  ||
+                   (moe.order == 0 && moe.choice < 40 && curly.match == true && larry.match == false && larry.choice < 40 && player.choice > 39 && curly.choice > moe.choice && curly.choice > larry.choice)  ||
+                   (moe.order == 0 && moe.choice < 40 && curly.match == true && player.match == true && larry.choice > 39 && curly.choice > moe.choice && curly.choice > player.choice)||
+                   (moe.order == 0 && moe.choice < 40 && curly.match == true && player.match == false && player.choice < 40 && larry.choice > 39 && curly.choice > moe.choice && curly.choice > player.choice))
+                {
+
                     cout << "Curly takes the trick." << endl;
                     // Check for Q spades
-                    if (larry.choice == 37 || player.choice == 37 || moe.choice == 37){
-                        curly.tScore += 27;
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ){
+                        curly.tScore += 14;
                         player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1;
                     }
                     // No one played Q spades
@@ -775,11 +957,28 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }
                 }
                 // Moe wins trick
-                else if (moe.match == true && moe.choice > player.choice && moe.choice > curly.choice && moe.choice > larry.choice){
+                else if((moe.order == 0 && moe.choice > 39 && player.choice < 40 && larry.choice < 40 && curly.choice < 40) ||
+                   (moe.order == 0 && moe.choice < 40 && player.choice > 39 && (larry.match == true && curly.match == true && moe.choice > larry.choice && moe.choice > curly.choice) || (larry.match == true && curly.match == false && curly.choice < 40 && moe.choice > larry.choice) || (curly.match == true && larry.match == false && larry.choice < 40 && moe.choice > curly.choice)) ||
+                   (moe.order == 0 && moe.choice < 40 && larry.choice > 39 && (player.match == true && curly.match == true && moe.choice > player.choice && moe.choice > curly.choice) || (player.match == true && curly.match == false && curly.choice < 40 && moe.choice > player.choice) || (curly.match == true && player.match == false && player.choice < 40 && moe.choice > curly.choice)) ||	
+                   (moe.order == 0 && moe.choice < 40 && curly.choice > 39 && (player.match == true && larry.match == true && moe.choice > player.choice && moe.choice > larry.choice) || (player.match == true && larry.match == false && larry.choice < 40 && moe.choice > player.choice) || (larry.match == true && player.match == false && player.choice < 40 && moe.choice > larry.choice)) ||
+                   (player.order == 0 && player.choice < 40 && moe.match == true && curly.match == true && larry.choice > 39 && moe.choice > player.choice && moe.choice > curly.choice)  ||
+                   (player.order == 0 && player.choice < 40 && moe.match == true && curly.match == false && curly.choice < 40 && larry.choice > 39 && moe.choice > player.choice && moe.choice > curly.choice)  ||
+                   (player.order == 0 && player.choice < 40 && moe.match == true && larry.match == true && curly.choice > 39 && moe.choice > player.choice && moe.choice > larry.choice)||
+                   (player.order == 0 && player.choice < 40 && moe.match == true && larry.match == false && larry.choice < 40 && curly.choice > 39 && moe.choice > player.choice && moe.choice > larry.choice)||
+                   (larry.order == 0 && larry.choice < 40 && moe.match == true && curly.match == true && player.choice > 39 && moe.choice > larry.choice && moe.choice > curly.choice)  ||
+                   (larry.order == 0 && larry.choice < 40 && moe.match == true && curly.match == false && curly.choice < 40 && player.choice > 39 && moe.choice > larry.choice && moe.choice > curly.choice)  ||
+                   (larry.order == 0 && larry.choice < 40 && moe.match == true && player.match == true && curly.choice > 39 && moe.choice > larry.choice && moe.choice > player.choice)||
+                   (larry.order == 0 && larry.choice < 40 && moe.match == true && player.match == false && player.choice < 40 && curly.choice > 39 && moe.choice > larry.choice && moe.choice > player.choice)||
+                   (curly.order == 0 && curly.choice < 40 && moe.match == true && larry.match == true && player.choice > 39 && moe.choice > curly.choice && moe.choice > larry.choice)  ||
+                   (curly.order == 0 && curly.choice < 40 && moe.match == true && larry.match == false && larry.choice < 40 && player.choice > 39 && moe.choice > curly.choice && moe.choice > larry.choice)  ||
+                   (curly.order == 0 && curly.choice < 40 && moe.match == true && player.match == true && larry.choice > 39 && moe.choice > curly.choice && moe.choice > player.choice)||
+                   (curly.order == 0 && curly.choice < 40 && moe.match == true && player.match == false && player.choice < 40 && larry.choice > 39 && moe.choice > curly.choice && moe.choice > player.choice))
+                {
+
                     cout << "Moe takes the trick." << endl;
                     // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || player.choice == 37){
-                        moe.tScore += 27;
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37){
+                        moe.tScore += 14;
                         player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0;
                     }
                     // No one played Q spades
@@ -789,19 +988,40 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }
                 }
             }
-            // No one played a heart
-            else {
+// No one played a heart
+            else if (player.choice < 40 && larry.choice < 40 && curly.choice < 40 && moe.choice < 40){
                 if(player.choice != 37 && larry.choice != 37 && curly.choice != 37 && moe.choice != 37) {
                     cout << "Trick worth no points." << endl;    
                 }
-                else if(player.choice == 37 || larry.choice == 37 || curly.choice == 37 || moe.choice == 37) {
+                else if(larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ) {
                     cout << "Trick worth thirteen points." << endl;    
                 }
-                // Player wins trick
-                if (player.match == true && player.choice > larry.choice && player.choice > curly.choice && player.choice > moe.choice) {
+            // Player wins trick
+                if((player.order == 0 && moe.match == true && larry.match == true && curly.match == true && player.choice > larry.choice && player.choice > curly.choice && player.choice > moe.choice) ||
+                    (player.order == 0 && moe.match == true && larry.match == true && curly.match == false && player.choice > larry.choice && player.choice > moe.choice) ||
+                    (player.order == 0 && curly.match == true && larry.match == true && moe.match == false && player.choice > larry.choice && player.choice > curly.choice) ||
+                    (player.order == 0 && moe.match == true && curly.match == true && larry.match == false && player.choice > curly.choice && player.choice > moe.choice) ||
+                    (player.order == 0 && moe.match == true && larry.match == true && curly.match == false && player.choice > larry.choice && player.choice > moe.choice) ||
+                    (player.order == 0 && moe.match == true && larry.match == false && curly.match == false && player.choice > moe.choice) ||		
+                    (player.order == 0 && larry.match == true && moe.match == false && curly.match == false && player.choice > larry.choice) ||
+                    (player.order == 0 && curly.match == true && larry.match == false && moe.match == false && player.choice > curly.choice) ||
+                    (player.order == 0 && moe.match == false && larry.match == false && curly.match == false) ||
+		    (larry.order == 0 && moe.match == true && player.match == true && curly.match == true && player.choice > larry.choice && player.choice > curly.choice && player.choice > moe.choice) ||
+                    (larry.order == 0 && curly.match == true && player.match == true && moe.match == false && player.choice > larry.choice && player.choice > curly.choice) ||
+                    (larry.order == 0 && moe.match == true && player.match == true && curly.match == false && player.choice > larry.choice && player.choice > moe.choice) ||                   
+                    (larry.order == 0 && player.match == true && moe.match == false && curly.match == false && player.choice > larry.choice) || 
+		    (curly.order == 0 && moe.match == true && player.match == true && larry.match == true && player.choice > curly.choice && player.choice > larry.choice && player.choice > moe.choice) ||
+                    (curly.order == 0 && larry.match == true && player.match == true && moe.match == false && player.choice > curly.choice && player.choice > larry.choice) ||
+                    (curly.order == 0 && moe.match == true && player.match == true && larry.match == false && player.choice > curly.choice && player.choice > moe.choice) ||                   
+                    (curly.order == 0 && player.match == true && moe.match == false && larry.match == false && player.choice > curly.choice) || 
+		    (moe.order == 0 && curly.match == true && player.match == true && larry.match == true && player.choice > moe.choice && player.choice > larry.choice && player.choice > curly.choice) ||
+                    (moe.order == 0 && larry.match == true && player.match == true && curly.match == false && player.choice > moe.choice && player.choice > larry.choice) ||
+                    (moe.order == 0 && curly.match == true && player.match == true && larry.match == false && player.choice > moe.choice && player.choice > curly.choice) ||                   
+                    (moe.order == 0 && player.match == true && curly.match == false && larry.match == false && player.choice > moe.choice)){
+                    
                     cout << "Player takes the trick." << endl;
                     // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37){
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37){
                         player.tScore += 13;
                         player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3;
                     }
@@ -812,10 +1032,32 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }
                 }
                 // Larry wins trick
-                else if (larry.match == true && larry.choice > player.choice && larry.choice > curly.choice && larry.choice > moe.choice){
+                
+                else if((larry.order == 0 && moe.match == true && player.match == true && curly.match == true && larry.choice > player.choice && larry.choice > curly.choice && larry.choice > moe.choice) ||
+                    (larry.order == 0 && moe.match == true && player.match == true && curly.match == false && larry.choice > player.choice && larry.choice > moe.choice) ||
+                    (larry.order == 0 && curly.match == true && player.match == true && moe.match == false && larry.choice > player.choice && larry.choice > curly.choice) ||
+                    (larry.order == 0 && moe.match == true && curly.match == true && player.match == false && larry.choice > curly.choice && larry.choice > moe.choice) ||
+                    (larry.order == 0 && moe.match == true && player.match == true && curly.match == false && larry.choice > player.choice && larry.choice > moe.choice) ||
+                    (larry.order == 0 && moe.match == true && player.match == false && curly.match == false && larry.choice > moe.choice) ||		
+                    (larry.order == 0 && player.match == true && moe.match == false && curly.match == false && larry.choice > player.choice) ||
+                    (larry.order == 0 && curly.match == true && player.match == false && moe.match == false && larry.choice > curly.choice) ||
+                    (larry.order == 0 && moe.match == false && player.match == false && curly.match == false) ||
+		    (player.order == 0 && moe.match == true && larry.match == true && curly.match == true && larry.choice > player.choice && larry.choice > curly.choice && larry.choice > moe.choice) ||
+                    (player.order == 0 && curly.match == true && larry.match == true && moe.match == false && larry.choice > player.choice && larry.choice > curly.choice) ||
+                    (player.order == 0 && moe.match == true && larry.match == true && curly.match == false && larry.choice > player.choice && larry.choice > moe.choice) ||                   
+                    (player.order == 0 && larry.match == true && moe.match == false && curly.match == false && larry.choice > player.choice) || 
+		    (curly.order == 0 && moe.match == true && larry.match == true && player.match == true && larry.choice > curly.choice && larry.choice > player.choice && larry.choice > moe.choice) ||
+                    (curly.order == 0 && player.match == true && larry.match == true && moe.match == false && larry.choice > curly.choice && larry.choice > player.choice) ||
+                    (curly.order == 0 && moe.match == true && larry.match == true && player.match == false && larry.choice > curly.choice && larry.choice > moe.choice) ||                   
+                    (curly.order == 0 && larry.match == true && moe.match == false && player.match == false && larry.choice > curly.choice) || 
+		    (moe.order == 0 && curly.match == true && larry.match == true && player.match == true && larry.choice > moe.choice && larry.choice > player.choice && larry.choice > curly.choice) ||
+                    (moe.order == 0 && player.match == true && larry.match == true && curly.match == false && larry.choice > moe.choice && larry.choice > player.choice) ||
+                    (moe.order == 0 && curly.match == true && larry.match == true && player.match == false && larry.choice > moe.choice && larry.choice > curly.choice) ||                   
+                    (moe.order == 0 && larry.match == true && curly.match == false && player.match == false && larry.choice > moe.choice)) {
+                    
                     cout << "Larry takes the trick." << endl;
                     // Check for Q spades
-                    if (player.choice == 37 || curly.choice == 37 || moe.choice == 37){
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ){
                         larry.tScore += 13;
                         player.order = 3; larry.order = 0; curly.order = 1; moe.order = 2;
                     }
@@ -826,10 +1068,31 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }                    
                 }
                 // Curly wins trick
-                else if (curly.match == true && curly.choice > player.choice && curly.choice > larry.choice && curly.choice > moe.choice){
+                else if((curly.order == 0 && moe.match == true && player.match == true && larry.match == true && curly.choice > player.choice && curly.choice > larry.choice && curly.choice > moe.choice) ||
+                    (curly.order == 0 && moe.match == true && player.match == true && larry.match == false && curly.choice > player.choice && curly.choice > moe.choice) ||
+                    (curly.order == 0 && larry.match == true && player.match == true && moe.match == false && curly.choice > player.choice && curly.choice > larry.choice) ||
+                    (curly.order == 0 && moe.match == true && larry.match == true && player.match == false && curly.choice > larry.choice && curly.choice > moe.choice) ||
+                    (curly.order == 0 && moe.match == true && player.match == true && larry.match == false && curly.choice > player.choice && curly.choice > moe.choice) ||
+                    (curly.order == 0 && moe.match == true && player.match == false && larry.match == false && curly.choice > moe.choice) ||		
+                    (curly.order == 0 && player.match == true && moe.match == false && larry.match == false && curly.choice > player.choice) ||
+                    (curly.order == 0 && larry.match == true && player.match == false && moe.match == false && curly.choice > larry.choice) ||
+                    (curly.order == 0 && moe.match == false && player.match == false && larry.match == false) ||
+		    (player.order == 0 && moe.match == true && curly.match == true && larry.match == true && curly.choice > player.choice && curly.choice > larry.choice && curly.choice > moe.choice) ||
+                    (player.order == 0 && larry.match == true && curly.match == true && moe.match == false && curly.choice > player.choice && curly.choice > larry.choice) ||
+                    (player.order == 0 && moe.match == true && curly.match == true && larry.match == false && curly.choice > player.choice && curly.choice > moe.choice) ||                   
+                    (player.order == 0 && curly.match == true && moe.match == false && larry.match == false && curly.choice > player.choice) || 
+		    (larry.order == 0 && moe.match == true && curly.match == true && player.match == true && curly.choice > larry.choice && curly.choice > player.choice && curly.choice > moe.choice) ||
+                    (larry.order == 0 && player.match == true && curly.match == true && moe.match == false && curly.choice > larry.choice && curly.choice > player.choice) ||
+                    (larry.order == 0 && moe.match == true && curly.match == true && player.match == false && curly.choice > larry.choice && curly.choice > moe.choice) ||                   
+                    (larry.order == 0 && curly.match == true && moe.match == false && player.match == false && curly.choice > larry.choice) || 
+		    (moe.order == 0 && larry.match == true && curly.match == true && player.match == true && curly.choice > moe.choice && curly.choice > player.choice && curly.choice > larry.choice) ||
+                    (moe.order == 0 && player.match == true && curly.match == true && larry.match == false && curly.choice > moe.choice && curly.choice > player.choice) ||
+                    (moe.order == 0 && larry.match == true && curly.match == true && player.match == false && curly.choice > moe.choice && curly.choice > larry.choice) ||                   
+                    (moe.order == 0 && curly.match == true && larry.match == false && player.match == false && curly.choice > moe.choice)) {
+                    
                     cout << "Curly takes the trick." << endl;
                     // Check for Q spades
-                    if (larry.choice == 37 || player.choice == 37 || moe.choice == 37){
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37 ){
                         curly.tScore += 13;
                         player.order = 2; larry.order = 3; curly.order = 0; moe.order = 1;
                     }
@@ -840,10 +1103,31 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                     }
                 }
                 // Moe wins trick
-                else if (moe.match == true && moe.choice > player.choice && moe.choice > curly.choice && moe.choice > larry.choice){
+                else if((moe.order == 0 && curly.match == true && player.match == true && larry.match == true && moe.choice > player.choice && moe.choice > larry.choice && moe.choice > curly.choice) ||
+                    (moe.order == 0 && curly.match == true && player.match == true && larry.match == false && moe.choice > player.choice && moe.choice > curly.choice) ||
+                    (moe.order == 0 && larry.match == true && player.match == true && curly.match == false && moe.choice > player.choice && moe.choice > larry.choice) ||
+                    (moe.order == 0 && curly.match == true && larry.match == true && player.match == false && moe.choice > larry.choice && moe.choice > curly.choice) ||
+                    (moe.order == 0 && curly.match == true && player.match == true && larry.match == false && moe.choice > player.choice && moe.choice > curly.choice) ||
+                    (moe.order == 0 && curly.match == true && player.match == false && larry.match == false && moe.choice > curly.choice) ||		
+                    (moe.order == 0 && player.match == true && curly.match == false && larry.match == false && moe.choice > player.choice) ||
+                    (moe.order == 0 && larry.match == true && player.match == false && curly.match == false && moe.choice > larry.choice) ||
+                    (moe.order == 0 && curly.match == false && player.match == false && larry.match == false) ||
+		    (player.order == 0 && curly.match == true && moe.match == true && larry.match == true && moe.choice > player.choice && moe.choice > larry.choice && moe.choice > curly.choice) ||
+                    (player.order == 0 && larry.match == true && moe.match == true && curly.match == false && moe.choice > player.choice && moe.choice > larry.choice) ||
+                    (player.order == 0 && curly.match == true && moe.match == true && larry.match == false && moe.choice > player.choice && moe.choice > curly.choice) ||                   
+                    (player.order == 0 && moe.match == true && curly.match == false && larry.match == false && moe.choice > player.choice) || 
+		    (larry.order == 0 && curly.match == true && moe.match == true && player.match == true && moe.choice > larry.choice && moe.choice > player.choice && moe.choice > curly.choice) ||
+                    (larry.order == 0 && player.match == true && moe.match == true && curly.match == false && moe.choice > larry.choice && moe.choice > player.choice) ||
+                    (larry.order == 0 && curly.match == true && moe.match == true && player.match == false && moe.choice > larry.choice && moe.choice > curly.choice) ||                   
+                    (larry.order == 0 && moe.match == true && curly.match == false && player.match == false && moe.choice > larry.choice) || 
+		    (curly.order == 0 && larry.match == true && moe.match == true && player.match == true && moe.choice > curly.choice && moe.choice > player.choice && moe.choice > larry.choice) ||
+                    (curly.order == 0 && player.match == true && moe.match == true && larry.match == false && moe.choice > curly.choice && moe.choice > player.choice) ||
+                    (curly.order == 0 && larry.match == true && moe.match == true && player.match == false && moe.choice > curly.choice && moe.choice > larry.choice) ||                   
+                    (curly.order == 0 && moe.match == true && larry.match == false && player.match == false && moe.choice > curly.choice)) {
+                    
                     cout << "Moe takes the trick." << endl;
                     // Check for Q spades
-                    if (larry.choice == 37 || curly.choice == 37 || player.choice == 37){
+                    if (larry.choice == 37 || curly.choice == 37 || moe.choice == 37 || player.choice == 37){
                         moe.tScore += 13;
                         player.order = 1; larry.order = 2; curly.order = 3; moe.order = 0;
                     }
@@ -855,7 +1139,7 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
                 }
             }
     cout << "Player hand is " << player.tScore << "\t" 
-         << "Larry hand is " << larry.tScore << "\t" 
-         << "Curly hand is " << curly.tScore << "\t" 
+         << "Larry hand is " << larry.tScore << "\t\t" 
+         << "Curly hand is " << curly.tScore << "\t\t" 
          << "Moe hand is " << moe.tScore << endl;
 }

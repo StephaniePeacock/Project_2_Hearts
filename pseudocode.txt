@@ -1,0 +1,115 @@
+// validate the player is always asking for a club - even if one is not available
+// npc logic - > larry played diamonds, moe had none. moe chose 2spade instead of a heart. this messed up scoring as well. moe won, despite not matching the trick.
+// add trick increment
+
+
+
+Pseudo Code
+
+// Set random seed
+// Declare variables
+// Check if player has played before
+	// Open wins file
+	// Read in wins & total
+	// Close wins file
+// Make sure we don't divide by 0!
+	// If total !0
+		// Calculate win/loss ratio
+		// Output current win/loss ratio
+	// Else Intoduce game, get player name
+
+
+// Assign face values to the cards to match deck
+// Check game score (GAME LOOP BEGINS)
+	// If anyone > 50
+		// Output who won
+			// If player won, increment wins and total
+			// If Player lost only increment total
+		// Get winLoss ratio
+		// Output win %
+		// Open file
+		// Record wins & total to file
+		// Close file
+		// End Game
+	// If no one > 50 game loop proceeds
+
+
+
+
+// Shuffle deck & face values
+// Deal Cards - 13 to each player, in order shuffled
+// Sort player hands
+	// Bubble sort player
+	// Selection sort Larry
+	// Mark sort Curly & Moe
+// Begin loop to play the hand (13 times - 1 per card in hand)
+	// If first trick
+		//perform linear search to find 2 clubs
+			// While loop to go through the deck
+				// Increments the indx if not found
+				// ends the loop when 2 clubs selected 
+			// return the indx 2 clubs was at
+	// assign initial player based on who has 2 clubs
+		// If indx is 0-12  player first, then larry, curly, moe
+		// If indx is 13-25 larry first, then curly, moe, player
+		// if indx is 26-38 curly first, then moe, player, larry
+		// else (indx 39-51) moe first, then player, larry, curly
+	// Begin loop to play trick (4 times - 1 per player)
+		// If player's turn
+			// Print cards	
+			// Get player choice - do/while validate card is in range and has not been played
+				// If player has 2 clubs, force that play
+				// Else if player not first, force suit compliance
+				// Else (player is first in the trick) player picks any card
+			// Print out what the player played
+			// Set the player's choice to = value of the hand[] they played for scoring
+		// If Stooge's turn	
+			// PlayCard
+				// Set chosen to false (when choice is set chosen = true and function returns to main)
+				// Determine if Stooge order = 0
+					// If Stooge has 2 clubs, force that play	
+					// Stooge first but no 2 clubs
+						// play smallest card
+				// If Player order = 0
+					// Loop to Match the suit if possible - playing lowest card possible
+					// Loop to Play Q spades, A spades, or K spades first if can't match suit
+					// Loop to Lastly, play the highest card available 
+				// Else If Larry order = 0 (& Stooge is not Larry)
+					// Loop to Match the suit if possible - playing lowest card possible
+					// Loop to Play Q spades, A spades, or K spades first if can't match suit
+					// Loop to Lastly, play the highest card available
+				// Else If Curly order = 0 (& Stooge is not Curly)
+					// Loop to Match the suit if possible - playing lowest card possible
+					// Loop to Play Q spades, A spades, or K spades first if can't match suit
+					// Loop to Lastly, play the highest card available					
+				// Else Moe order = 0
+					// Loop to Match the suit if possible - playing lowest card possible
+					// Loop to Play Q spades, A spades, or K spades first if can't match suit
+					// Loop to Lastly, play the highest card available
+			// Output the card Played
+			// Set the Stooge's choice to = value of the hand[] they played for scoring
+NEED TO DO	// End Trick - increment trick++	
+
+// Score the trick	
+
+// Output Hand's final score
+	// If anyone shoot moon	- assign 26 points to all other opponents set that person's hand to 0
+	// Else add the hand score to the game score
+		// Reset hand scores to 0
+		// Reset count to 0 with count(); (static variable)
+// Output current game's score
+
+// If anyone has game score > 50
+	// If player won
+		// Congratulate them, add to wins++, add to total++
+	// if player lost find winner
+		// Condolences, add to total++
+// calculate win/loss ratio
+// output the percentage of games won
+// record game results to the file
+	// open file
+	// outWins wins & total
+	// close file
+// END PROGRAM
+
+		

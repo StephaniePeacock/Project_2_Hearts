@@ -22,6 +22,7 @@ struct Player {
     string cards[13];
     bool match;
     int tScore;
+    int score;
 };
 
 
