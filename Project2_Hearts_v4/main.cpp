@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
         cout << "\"Alright " << player.name << ", let's play Hearts! I'll deal.\"" << endl;
     }
      // Assign face values
-    fv(show,face,suit,SUITS,HAND);
+    deal(show,face,suit,SUITS,HAND);
     // put the outer do while loop for the game here
     do {
     //Initialize indx 
@@ -100,10 +100,11 @@ int main(int argc, char** argv) {
     mSort(moe, moe.hand, HAND, moe.cards);
     // Loop to play the hand
     for (int i = 0; i < 13; i++) {
-        
+        // used for the linear search to find 2 of clubs - resets to 0 each hand
         indx = 0;
+        
         // For the first trick, find the player with 2 of clubs
-        if(indx == 0) {
+        if(i == 0) {
             linSrch(deck,NCARDS,indx);    
 
             if     (indx < 13)              { player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3; }
@@ -113,9 +114,8 @@ int main(int argc, char** argv) {
            
         }
         // reset match
-            player.match = larry.match = curly.match = moe.match = false;
+        player.match = larry.match = curly.match = moe.match = false;
         // Loop 4 times with If/Else to play trick
-        
         for(int trick = 0; trick < 4; trick++){
             
         //Player's Turn    
@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
             // Output the card played
             played(player, player.name, player.choice, player.cards);
             // Set choice value to the played card value for scoring
-            set(player, player.choice, player.hand);       
+            player.choice = player.hand[player.choice - 1];    
         // Larry's Turn        
             } else if (larry.order == trick) {
             //    cout << "Larry's cards";
@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
                 // Output the card played
                 played(larry, larry.name, larry.choice, larry.cards);
                 // Set the played card for scoring
-                set(larry, larry.choice, larry.hand);
+                larry.choice = larry.hand[larry.choice - 1];
         // Curly's Turn        
             }else if(curly.order == trick) { 
             //    cout << "Curly's cards";
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
                 // Output the card played
                 played(curly, curly.name, curly.choice, curly.cards);
                 // Set the played card for scoring
-                set(curly, curly.choice, curly.hand);
+                curly.choice = curly.hand[curly.choice - 1];
         // Moe's Turn        
             }else if(moe.order == trick) {
             //    cout << "Moe's cards"<< endl;
@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
                 // Output the card played
                 played(moe, moe.name, moe.choice, moe.cards);
                 // Set the played card for scoring
-                set(moe, moe.choice, moe.hand);
+                moe.choice = moe.hand[moe.choice - 1];
             }
         }
         // Score Trick & set the player order for the next trick
@@ -251,11 +251,15 @@ int main(int argc, char** argv) {
               player.order,larry.order,curly.order,moe.order,
               player.match,larry.match,curly.match,moe.match);
         // Change choice back it's original value and remove played cards 
-        unset(player,player.choice, player.hand, player.cards);
+        player.hand[player.choice - 1] = 0;
+        player.cards[player.choice - 1] = "";
         count(); 
-        npcUn(larry,larry.choice, larry.hand, larry.cards);
-        npcUn(curly,curly.choice, curly.hand, curly.cards);
-        npcUn(moe,moe.choice, moe.hand, moe.cards);    
+        larry.hand[larry.choice - 1] = 0;
+        larry.cards[larry.choice - 1] = "";
+        curly.hand[curly.choice - 1] = 0;
+        curly.cards[curly.choice - 1] = "";
+        moe.hand[moe.choice - 1] = 0;
+        moe.cards[moe.choice - 1] = "";  
 
 
         }
@@ -317,7 +321,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-void fv(string show[], char face[][13], string suit[], const short SUITS, const short HAND) {    
+void deal(string show[], char face[][13], string suit[], const short SUITS, const short HAND) {    
     int cFace = 0;
     for(int sym = 0; sym < SUITS; sym++) {
         for(int rank = 0; rank < HAND; rank++) {
@@ -445,19 +449,10 @@ void played(Player &, string name, int choice, string cards[]) {
     }
     cout << endl;
 }
-void set(Player &, int &choice, int hand[] ){
-            // Set choice to card value for scoring
-            choice == 1  ? choice = hand[0] : choice == 2  ? choice = hand[1] :
-            choice == 3  ? choice = hand[2] : choice == 4  ? choice = hand[3] : 
-            choice == 5  ? choice = hand[4] : choice == 6  ? choice = hand[5] :  
-            choice == 7  ? choice = hand[6] : choice == 8  ? choice = hand[7] : 
-            choice == 9  ? choice = hand[8] : choice == 10 ? choice = hand[9] : 
-            choice == 11 ? choice = hand[10]: choice == 12 ? choice = hand[11]: 
-            choice = hand[12];
-}
+
 void playCard(Player& larry,Player& curly,Player& moe, Player& player, int& choice, int & order, int hand[], string name, int trick, bool& match) {
     bool chosen = false;
-    // If npc is first to play in the trick - check for 2 clubs first
+    // If Stooge is first to play in the trick - check for 2 clubs first
     if(order == 0) { 
         if ( hand[0] == 1) {choice = 1; match = true;}
         // If no 2 clubs, play lowest card
@@ -566,55 +561,6 @@ void playCard(Player& larry,Player& curly,Player& moe, Player& player, int& choi
         }
     }
 }
-void unset(Player &, int &choice, int hand[], string cards[]){
-    // Set choice back to the card number instead of card value & set used card to 0
-    choice == hand[0]  ? choice = 1  : choice == hand[1]  ? choice = 2  : 
-    choice == hand[2]  ? choice = 3  : choice == hand[3]  ? choice = 4  : 
-    choice == hand[4]  ? choice = 5  : choice == hand[5]  ? choice = 6  :     
-    choice == hand[6]  ? choice = 7  : choice == hand[7]  ? choice = 8  : 
-    choice == hand[8]  ? choice = 9  : choice == hand[9]  ? choice = 10 : 
-    choice == hand[10] ? choice = 11 : choice == hand[11] ? choice = 12 :     
-    choice = 13;     
-    // set chosen card to 0
-    if (choice == 1) { hand[0]  = 0; cards[0]  = "";}
-    if (choice == 2) { hand[1]  = 0; cards[1]  = "";}
-    if (choice == 3) { hand[2]  = 0; cards[2]  = "";}
-    if (choice == 4) { hand[3]  = 0; cards[3]  = "";}
-    if (choice == 5) { hand[4]  = 0; cards[4]  = "";}
-    if (choice == 6) { hand[5]  = 0; cards[5]  = "";}
-    if (choice == 7) { hand[6]  = 0; cards[6]  = "";}
-    if (choice == 8) { hand[7]  = 0; cards[7]  = "";}
-    if (choice == 9) { hand[8]  = 0; cards[8]  = "";}
-    if (choice == 10){ hand[9]  = 0; cards[9]  = "";}
-    if (choice == 11){ hand[10] = 0; cards[10] = "";}
-    if (choice == 12){ hand[11] = 0; cards[11] = "";}
-    if (choice == 13){ hand[12] = 0; cards[12] = "";}
-}
-void npcUn(Player &, int &choice, int hand[], string cards[]){
-    // Set choice back to the card number instead of card value & set used card to 0
-    choice == hand[0]  ? choice = 1  : choice == hand[1]  ? choice = 2  : 
-    choice == hand[2]  ? choice = 3  : choice == hand[3]  ? choice = 4  : 
-    choice == hand[4]  ? choice = 5  : choice == hand[5]  ? choice = 6  :     
-    choice == hand[6]  ? choice = 7  : choice == hand[7]  ? choice = 8  : 
-    choice == hand[8]  ? choice = 9  : choice == hand[9]  ? choice = 10 : 
-    choice == hand[10] ? choice = 11 : choice == hand[11] ? choice = 12 :     
-    choice = 13;     
-    // set chosen card to 0
-    if (choice == 1) { hand[0]  = 0; cards[0]  = ""; }
-    if (choice == 2) { hand[1]  = 0; cards[1]  = ""; }
-    if (choice == 3) { hand[2]  = 0; cards[2]  = ""; }
-    if (choice == 4) { hand[3]  = 0; cards[3]  = ""; }
-    if (choice == 5) { hand[4]  = 0; cards[4]  = ""; }
-    if (choice == 6) { hand[5]  = 0; cards[5]  = ""; }
-    if (choice == 7) { hand[6]  = 0; cards[6]  = ""; }
-    if (choice == 8) { hand[7]  = 0; cards[7]  = ""; }
-    if (choice == 9) { hand[8]  = 0; cards[8]  = ""; }
-    if (choice == 10){ hand[9]  = 0; cards[9]  = ""; }
-    if (choice == 11){ hand[10] = 0; cards[10] = ""; }
-    if (choice == 12){ hand[11] = 0; cards[11] = ""; }
-    if (choice == 13){ hand[12] = 0; cards[12] = ""; }
-}    
-
 void trick( Player& player, Player& larry, Player& curly, Player& moe,
             int playerchoice,int larrychoice,int curlychoice,int moechoice,
             int& playertScore, int& larrytScore,int& curlytScore,int& moetScore,

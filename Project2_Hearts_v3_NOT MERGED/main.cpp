@@ -11,7 +11,6 @@
 #include <ctime>     // Time Library
 #include <iomanip>   // Formatting Library
 #include <fstream>   // File Library
-#include <vector>
 
 using namespace std;
 
@@ -31,16 +30,18 @@ int main(int argc, char** argv) {
     const short HAND = NCARDS/4;      // divides the deck into 4 
     const short SUITS = 4;
     // Array to hold the card number in the deck
-    vector<int> deck {
+    int deck[NCARDS] = {
             1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, // indx 0 - 12
             14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, // indx 13 - 25
             27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, // indx 26 - 38
             40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52};// indx 39 - 51
+    // Holds the numerical face value
+    int fv[HAND] = {1,2,3,4,5,6,7,8,9,10,11,12,13};    
+    int count = 0;
     int indx;
     int wins;
     int total;
     float winLoss;
-    char confirm;
     // Displays Face Values of cards - Aces High
     char face[SUITS][HAND] = {{'2','3','4','5','6','7','8','9','T','J','Q','K','A'},
                               {'2','3','4','5','6','7','8','9','T','J','Q','K','A'},
@@ -64,7 +65,12 @@ int main(int argc, char** argv) {
     inWins >> wins >> total;
     // Close the file for at the end!
     inWins.close();
-    
+    cout << "\"Hey buddy, we need a fourth player!" << endl
+            << " Join us for a game of Hearts?" << endl
+            << " My name is Larry, this is my good friend Curly," << endl
+            << " and that's his brother, Moe.\"" << endl << endl;
+           cout << "\"So what's your name?\"" << endl;
+        cin >> player.name;
     // Make sure we don't divide by 0!
     if(total != 0 ) {
         // Previous games have been played - output the ratio
@@ -72,16 +78,11 @@ int main(int argc, char** argv) {
         cout << "It looks like you have played before. You have won " << fixed << setprecision(2) << winLoss << "% of the games you have played." << endl;
     }
     else{
-        cout << "\"Hey buddy, we need a fourth player!" << endl
-            << " Join us for a game of Hearts?" << endl
-            << " My name is Larry, this is my good friend Curly," << endl
-            << " and that's his brother, Moe.\"" << endl << endl;
-           cout << "\"So what's your name?\"" << endl;
-        cin >> player.name;
+        
         cout << "\"Alright " << player.name << ", let's play Hearts! I'll deal.\"" << endl;
     }
      // Assign face values
-    fv(show,face,suit,SUITS,HAND);
+    faceVal(show,face,suit,SUITS,HAND);
     // put the outer do while loop for the game here
     do {
     //Initialize indx 
@@ -98,12 +99,14 @@ int main(int argc, char** argv) {
     sSort(larry, larry.hand, HAND, larry.cards);
     mSort(curly, curly.hand, HAND, curly.cards);
     mSort(moe, moe.hand, HAND, moe.cards);
+    
     // Loop to play the hand
     for (int i = 0; i < 13; i++) {
-        
+        // used for the linear search to find 2 of clubs - resets to 0 each hand
         indx = 0;
+        
         // For the first trick, find the player with 2 of clubs
-        if(indx == 0) {
+        if(i == 0) {
             linSrch(deck,NCARDS,indx);    
 
             if     (indx < 13)              { player.order = 0; larry.order = 1; curly.order = 2; moe.order = 3; }
@@ -113,88 +116,76 @@ int main(int argc, char** argv) {
            
         }
         // reset match
-            player.match = larry.match = curly.match = moe.match = false;
+        player.match = larry.match = curly.match = moe.match = false;
         // Loop 4 times with If/Else to play trick
-        
         for(int trick = 0; trick < 4; trick++){
             
         //Player's Turn    
             if (player.order == trick) {         
             // Print player's cards
-            print(player, player.hand, player.cards, HAND, player.choice);        
+            print(player, player.hand, player.cards, HAND, player.choice, count);        
             // Get player Choice - validates selection
             do {
                 cout << "Choose a card in your hand you wish to play: ";
                 cin >> player.choice;
+                if(player.order == 0){
+                    player.match = true;
+                }
                 // Add 2clubs validation                                   
                 while (player.order == 0 && player.hand[0] == 1 && player.choice != 1) {
                         cout << "Please play 2\u2663: ";
                         cin >> player.choice; 
                 }
-                if(player.order == 0){
-                    player.match = true;
-                }
+                
                 // Add suit validation
                 // Check for Clubs
-                    if((larry.order == 0 && larry.choice < 14) ||
-                       (curly.order == 0 && curly.choice < 14) ||
-                       (moe.order == 0 && moe.choice < 14)) {
-                       for(int i = 0; i < 12; i++) {
-                           int vc = i+1;
-
-                            while(player.choice == vc && player.hand[i] != 0 && (player.hand[i] >13 && player.hand[i+1] < 13 )) {
-
-                                        cout << "Please play \u2663: ";
-                                        cin >> player.choice;     
-                            }
-                            player.match = true;
-                        }
+                while(!player.match){
+                    if((player.hand[player.choice - 1] > 14 && (player.hand[0] != 0 && player.hand[0] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[1] != 0 && player.hand[1] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[2] != 0 && player.hand[2] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[3] != 0 && player.hand[3] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[4] != 0 && player.hand[4] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[5] != 0 && player.hand[5] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[6] != 0 && player.hand[6] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[7] != 0 && player.hand[7] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[8] != 0 && player.hand[8] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[9] != 0 && player.hand[9] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[10] != 0 && player.hand[10] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[11] != 0 && player.hand[11] < 13)) ||
+                      (player.hand[player.choice - 1] > 14 && (player.hand[12] != 0 && player.hand[12] < 13))){
+                            cout << "Please play \u2663: ";
+                            cin >> player.choice; 
+                    } 
+                    else {
+                        player.match = true;
                     }
+                }
                 // Check for Diamonds
-                    if((larry.order == 0 && larry.choice > 13 && larry.choice < 27) ||
-                       (curly.order == 0 && curly.choice > 13 && curly.choice < 27) ||
-                       (moe.order == 0 && moe.choice > 13 && moe.choice < 27)) { 
-                        for(int i = 0; i < 12; i++) {
-                           int vc = i+1;
-                        
-                            while(player.choice == vc && player.hand[i] !=0 && (player.hand[i] <14 && player.hand[i] >26 && player.hand[i+1] >13 && player.hand[i+1] <27)) {
-                                        cout << "Please play \u2662: ";
-                                        cin >> player.choice;
-                            }
-                            player.match = true;
-                        }
-                    }
-                // Check for Spades
-                    if((larry.order == 0 && larry.choice > 26 && larry.choice < 40) ||
-                       (curly.order == 0 && curly.choice > 26 && curly.choice < 40) ||
-                       (moe.order == 0 && moe.choice > 26 && moe.choice < 40)) { 
-                        for(int i = 0; i < 12; i++) {
-                           int vc = i+1;
-                        
-                            while(player.choice == vc && player.hand[i] !=0 && (player.hand[i] <27 && player.hand[i] >39 && player.hand[i+1] >26 && player.hand[i+1] <40)) {
-                        
-                                    cout << "Please play \u2660: ";
-                                    cin >> player.choice;
-                            }
+                while(!player.match){
+                    if(((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[0] != 0 && player.hand[0] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[1] != 0 && player.hand[1] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[2] != 0 && player.hand[2] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[3] != 0 && player.hand[3] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[4] != 0 && player.hand[4] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[5] != 0 && player.hand[5] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[6] != 0 && player.hand[6] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[7] != 0 && player.hand[7] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[8] != 0 && player.hand[8] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[9] != 0 && player.hand[9] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[10] != 0 && player.hand[10] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[11] != 0 && player.hand[11] > 13 || player.hand[0] < 27)) ||
+                      ((player.hand[player.choice - 1] < 14 || player.hand[player.choice - 1] >  26) && (player.hand[12] != 0 && player.hand[12] > 13 || player.hand[0] < 27))){
+                            cout << "Please play \u2662: ";
+                            cin >> player.choice; 
+                    } 
+                    else {
                         player.match = true;
-                        }
                     }
-                // Check for hearts
-                    if((larry.order == 0 && larry.choice > 39) ||
-                       (curly.order == 0 && curly.choice > 39) ||
-                       (moe.order == 0 && moe.choice > 39)) { 
-                        
-                        for(int i = 0; i < 12; i++) {
-                           int vc = i+1;
-                        
-                            while(player.choice == vc && player.hand[i] !=0 && (player.hand[i] <40 && player.hand[i+1] >39)) {
-                       
-                                    cout << "Please play \u2661: ";
-                                    cin >> player.choice; 
-                            }
-                        player.match = true;
-                        }
-                    }
+                }
+            
+                    
+                    
+                    
             } while ((player.choice < 1 || player.choice > 13)    ||
                     (player.choice == 1  && player.hand[0]  == 0) ||
                     (player.choice == 2  && player.hand[1]  == 0) ||
@@ -251,8 +242,7 @@ int main(int argc, char** argv) {
               player.order,larry.order,curly.order,moe.order,
               player.match,larry.match,curly.match,moe.match);
         // Change choice back it's original value and remove played cards 
-        unset(player,player.choice, player.hand, player.cards);
-        count(); 
+        unset(player,player.choice, player.hand, player.cards,count);
         npcUn(larry,larry.choice, larry.hand, larry.cards);
         npcUn(curly,curly.choice, curly.hand, curly.cards);
         npcUn(moe,moe.choice, moe.hand, moe.cards);    
@@ -260,7 +250,7 @@ int main(int argc, char** argv) {
 
         }
     
-
+    count = 0;
     // Shuffle the deck
     shuffle(deck, NCARDS, show);
     // Deal cards
@@ -290,14 +280,6 @@ int main(int argc, char** argv) {
              << "Larry    : " << larry.score << endl
              << "Curly    : " << curly.score << endl
              << "Moe      : " << moe.score << endl       ;
-            
-            cout << "Do you want to continue the game? Y or N";
-            do{
-                cin >> confirm;
-                if(confirm == 'N' or confirm == 'n') {
-                    exit(0);
-                }
-            }while(confirm != 'Y' && confirm != 'y' && confirm != 'N' && confirm != 'n');
     
     } while (player.score < 50 && larry.score < 50 && curly.score < 50 && moe.score <50);
     cout << endl;
@@ -317,7 +299,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-void fv(string show[], char face[][13], string suit[], const short SUITS, const short HAND) {    
+void faceVal(string show[], char face[][13], string suit[], const short SUITS, const short HAND) {    
     int cFace = 0;
     for(int sym = 0; sym < SUITS; sym++) {
         for(int rank = 0; rank < HAND; rank++) {
@@ -327,14 +309,14 @@ void fv(string show[], char face[][13], string suit[], const short SUITS, const 
         }
     }
 }
-void shuffle(vector<int> deck, const unsigned short NCARDS, string show[]) {
+void shuffle(int deck[], const unsigned short NCARDS, string show[]) {
     for (int i = 0; i < NCARDS; i++) {
         int n = i + (rand()%(52 - i));
         swap(deck[i], deck[n]);
         swap(show[i], show[n]);
     }
 }
-void deal(Player &player,Player &larry,Player &curly,Player &moe, vector<int>deck, string show[]){
+void deal(Player &player,Player &larry,Player &curly,Player &moe, int deck[], string show[]){
     for(int i = 0; i < 13; i++) {
         player.hand[i] =  deck[i];   
         larry.hand[i]  =  deck[(i+13)];   
@@ -390,7 +372,7 @@ void mSort(Player &, int hand[], const short HAND, string cards[]){
         }
     }
 }
-int linSrch(vector<int> deck,const unsigned short NCARDS,int& indx) {
+int linSrch(int deck[],const unsigned short NCARDS,int& indx) {
     // start off with false
     bool found = false;
     // run until the val is found or we run through all the numbers
@@ -401,8 +383,8 @@ int linSrch(vector<int> deck,const unsigned short NCARDS,int& indx) {
     // sends back what index 2 of clubs (1) was found at
     return indx;
 }
-void print(Player &, int hand[], string cards[], const short HAND, int choice) {
-        if (count) {
+void print(Player &, int hand[], string cards[], const short HAND, int choice, int count) {
+        if (count < 14) {
         // output Player's remaining cards - if value is 0 an empty string is output
         cout << endl << "Play Card #:\t";
         if (hand[0] == 0) { cout << ""; } else { cout << "1" << "\t"; }
@@ -566,7 +548,7 @@ void playCard(Player& larry,Player& curly,Player& moe, Player& player, int& choi
         }
     }
 }
-void unset(Player &, int &choice, int hand[], string cards[]){
+void unset(Player &, int &choice, int hand[], string cards[], int &count){
     // Set choice back to the card number instead of card value & set used card to 0
     choice == hand[0]  ? choice = 1  : choice == hand[1]  ? choice = 2  : 
     choice == hand[2]  ? choice = 3  : choice == hand[3]  ? choice = 4  : 
@@ -576,19 +558,19 @@ void unset(Player &, int &choice, int hand[], string cards[]){
     choice == hand[10] ? choice = 11 : choice == hand[11] ? choice = 12 :     
     choice = 13;     
     // set chosen card to 0
-    if (choice == 1) { hand[0]  = 0; cards[0]  = "";}
-    if (choice == 2) { hand[1]  = 0; cards[1]  = "";}
-    if (choice == 3) { hand[2]  = 0; cards[2]  = "";}
-    if (choice == 4) { hand[3]  = 0; cards[3]  = "";}
-    if (choice == 5) { hand[4]  = 0; cards[4]  = "";}
-    if (choice == 6) { hand[5]  = 0; cards[5]  = "";}
-    if (choice == 7) { hand[6]  = 0; cards[6]  = "";}
-    if (choice == 8) { hand[7]  = 0; cards[7]  = "";}
-    if (choice == 9) { hand[8]  = 0; cards[8]  = "";}
-    if (choice == 10){ hand[9]  = 0; cards[9]  = "";}
-    if (choice == 11){ hand[10] = 0; cards[10] = "";}
-    if (choice == 12){ hand[11] = 0; cards[11] = "";}
-    if (choice == 13){ hand[12] = 0; cards[12] = "";}
+    if (choice == 1) { hand[0]  = 0; cards[0]  = ""; count++; }
+    if (choice == 2) { hand[1]  = 0; cards[1]  = ""; count++; }
+    if (choice == 3) { hand[2]  = 0; cards[2]  = ""; count++; }
+    if (choice == 4) { hand[3]  = 0; cards[3]  = ""; count++; }
+    if (choice == 5) { hand[4]  = 0; cards[4]  = ""; count++; }
+    if (choice == 6) { hand[5]  = 0; cards[5]  = ""; count++; }
+    if (choice == 7) { hand[6]  = 0; cards[6]  = ""; count++; }
+    if (choice == 8) { hand[7]  = 0; cards[7]  = ""; count++; }
+    if (choice == 9) { hand[8]  = 0; cards[8]  = ""; count++; }
+    if (choice == 10){ hand[9]  = 0; cards[9]  = ""; count++; }
+    if (choice == 11){ hand[10] = 0; cards[10] = ""; count++; }
+    if (choice == 12){ hand[11] = 0; cards[11] = ""; count++; }
+    if (choice == 13){ hand[12] = 0; cards[12] = ""; count++; }
 }
 void npcUn(Player &, int &choice, int hand[], string cards[]){
     // Set choice back to the card number instead of card value & set used card to 0
@@ -1150,15 +1132,4 @@ void trick( Player& player, Player& larry, Player& curly, Player& moe,
          << "Larry hand is " << larry.tScore << "\t\t" 
          << "Curly hand is " << curly.tScore << "\t\t" 
          << "Moe hand is " << moe.tScore << endl;
-}
-void count() {
-
-    static int counter = 0;  
-    counter++;  
-// Reset count to 0 when it hits 13
-    if (counter == 13) {
-        counter = 0;  // Reset count to 0
-
-    }
-
 }

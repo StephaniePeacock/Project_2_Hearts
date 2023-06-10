@@ -28,7 +28,7 @@ void bSort(Player &, int [], const short, string []);
 void sSort(Player &, int [], const short, string []);
 void mSort(Player &, int [], const short, string []);
 void print(Player &, int [], string [], const short, int);
-void fv(string [], char [][13], string [], const short, const short);
+void deal(string [], char [][13], string [], const short, const short);
 void set(Player &, int&, int[]);
 void unset(Player &, int&, int[], string[]);
 void npcUn(Player &, int &, int[], string[]);
